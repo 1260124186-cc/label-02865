@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <rect width="80" height="80" rx="16" fill="#F56C6C"/>
+  <!-- USB-A 接头（左侧） -->
+  <rect x="14" y="32" width="14" height="10" rx="2" fill="white"/>
+  <rect x="17" y="35" width="3" height="4" rx="0.5" fill="#F56C6C"/>
+  <rect x="22" y="35" width="3" height="4" rx="0.5" fill="#F56C6C"/>
+  <!-- 线缆（中间弯曲） -->
+  <path d="M28 37 C34 37 34 50 40 50 C46 50 46 37 52 37" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <!-- USB-C / Lightning 接头（右侧） -->
+  <rect x="52" y="33" width="14" height="8" rx="4" fill="white"/>
+</svg>
