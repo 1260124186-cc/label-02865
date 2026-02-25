@@ -11,7 +11,9 @@
         :class="{ active: currentTab === tab.path }"
         @click="switchTab(tab.path)"
       >
-        <el-icon :size="22"><component :is="tab.icon" /></el-icon>
+        <el-badge :value="tab.path === '/cart' && cartStore.totalCount > 0 ? cartStore.totalCount : ''" :hidden="tab.path !== '/cart' || cartStore.totalCount === 0" :max="99">
+          <el-icon :size="22"><component :is="tab.icon" /></el-icon>
+        </el-badge>
         <span>{{ tab.label }}</span>
       </div>
     </div>
@@ -19,13 +21,15 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useCartStore } from '@/store/cart'
+import { useUserStore } from '@/store/user'
 
 const router = useRouter()
 const route = useRoute()
 const cartStore = useCartStore()
+const userStore = useUserStore()
 
 const tabs = [
   { path: '/', label: '首页', icon: 'HomeFilled' },
@@ -39,6 +43,12 @@ const currentTab = computed(() => route.path)
 function switchTab(path) {
   router.push(path)
 }
+
+onMounted(() => {
+  if (userStore.isLoggedIn) {
+    cartStore.fetchCart()
+  }
+})
 </script>
 
 <style lang="scss" scoped>

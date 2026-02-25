@@ -142,6 +142,10 @@ CREATE TABLE IF NOT EXISTS `operation_log` (
 INSERT IGNORE INTO `user` (`id`, `username`, `password`, `nickname`, `role`, `status`) VALUES
 (1, 'admin', '$2a$10$W8YIBLH9yqtHfebcfW2I6.bXxcO9R2TUl0UT/EXgtu5iCHq2dNwye', '管理员', 1, 1);
 
+-- 普通用户账号: user / 123456
+INSERT IGNORE INTO `user` (`id`, `username`, `password`, `nickname`, `role`, `status`) VALUES
+(2, 'user', '$2a$10$W8YIBLH9yqtHfebcfW2I6.bXxcO9R2TUl0UT/EXgtu5iCHq2dNwye', '普通用户', 0, 1);
+
 INSERT IGNORE INTO `category` (`id`, `name`, `icon`, `sort_order`) VALUES
 (1, '手机', '/img/cat-phone.svg', 1),
 (2, '平板', '/img/cat-pad.svg', 2),

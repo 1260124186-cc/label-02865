@@ -39,9 +39,7 @@
         </el-tab-pane>
       </el-tabs>
 
-      <div class="demo-tip">
-        <p>演示账号: user / 123456</p>
-      </div>
+      
     </div>
   </div>
 </template>
@@ -169,15 +167,6 @@ async function handleRegister() {
   &:hover {
     background: #c62f32;
   }
-}
-
-.demo-tip {
-  text-align: center;
-  margin-top: 24px;
-  color: #999;
-  font-size: 12px;
-
-  p { margin: 4px 0; }
 }
 
 /* 去除浏览器自动填充的背景色 */

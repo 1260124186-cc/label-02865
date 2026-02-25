@@ -31,33 +31,39 @@
       <el-button type="primary" class="add-btn" @click="showForm = true">+ 新增收货地址</el-button>
     </div>
 
-    <el-dialog v-model="showForm" title="新增收货地址" width="90%" :close-on-click-modal="false">
-      <el-form :model="form" :rules="rules" ref="formRef" label-position="top">
-        <el-form-item label="收货人" prop="receiverName">
-          <el-input v-model="form.receiverName" placeholder="请输入收货人姓名" />
-        </el-form-item>
-        <el-form-item label="手机号" prop="receiverPhone">
-          <el-input v-model="form.receiverPhone" placeholder="请输入手机号" maxlength="11" />
-        </el-form-item>
-        <el-form-item label="省份" prop="province">
-          <el-input v-model="form.province" placeholder="如：广东省" />
-        </el-form-item>
-        <el-form-item label="城市" prop="city">
-          <el-input v-model="form.city" placeholder="如：深圳市" />
-        </el-form-item>
-        <el-form-item label="区/县" prop="district">
-          <el-input v-model="form.district" placeholder="如：南山区" />
-        </el-form-item>
-        <el-form-item label="详细地址" prop="detail">
-          <el-input v-model="form.detail" type="textarea" :rows="2" placeholder="街道、楼栋、门牌号等" />
-        </el-form-item>
-        <el-form-item>
-          <el-checkbox v-model="form.isDefault" :true-value="1" :false-value="0">设为默认地址</el-checkbox>
-        </el-form-item>
-      </el-form>
+    <el-dialog v-model="showForm" title="新增收货地址" width="90%" :close-on-click-modal="false" @closed="handleDialogClosed" class="addr-dialog">
+      <div class="addr-form-wrap">
+        <el-form :model="form" :rules="rules" ref="formRef" label-position="top" hide-required-asterisk class="addr-form">
+          <el-form-item prop="receiverName">
+            <el-input v-model="form.receiverName" placeholder="收货人姓名" />
+          </el-form-item>
+          <el-form-item prop="receiverPhone">
+            <el-input v-model="form.receiverPhone" placeholder="手机号" maxlength="11" />
+          </el-form-item>
+          <div class="region-row">
+            <el-form-item prop="province" class="region-item">
+              <el-input v-model="form.province" placeholder="省份" />
+            </el-form-item>
+            <el-form-item prop="city" class="region-item">
+              <el-input v-model="form.city" placeholder="城市" />
+            </el-form-item>
+            <el-form-item prop="district" class="region-item">
+              <el-input v-model="form.district" placeholder="区/县" />
+            </el-form-item>
+          </div>
+          <el-form-item prop="detail">
+            <el-input v-model="form.detail" placeholder="详细地址：街道、楼栋、门牌号等" />
+          </el-form-item>
+          <div class="default-check">
+            <el-checkbox v-model="form.isDefault" :true-value="1" :false-value="0">设为默认地址</el-checkbox>
+          </div>
+        </el-form>
+      </div>
       <template #footer>
-        <el-button @click="showForm = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
+        <div class="h5-dialog-footer">
+          <el-button class="h5-btn-cancel" @click="showForm = false">取消</el-button>
+          <el-button class="h5-btn-confirm" type="primary" :loading="saving" @click="handleSave">保存</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -105,11 +111,15 @@ async function handleSave() {
     await saveAddress(form.value)
     ElMessage.success('保存成功')
     showForm.value = false
-    form.value = { receiverName: '', receiverPhone: '', province: '', city: '', district: '', detail: '', isDefault: 0 }
     await loadList()
   } finally {
     saving.value = false
   }
+}
+
+function handleDialogClosed() {
+  form.value = { receiverName: '', receiverPhone: '', province: '', city: '', district: '', detail: '', isDefault: 0 }
+  formRef.value?.resetFields()
 }
 
 async function handleDelete(id) {
@@ -208,5 +218,26 @@ onMounted(() => loadList())
   background: #E4393C;
   border: none;
   height: 40px;
+}
+
+.addr-form-wrap {
+  .addr-form {
+    :deep(.el-form-item__label) {
+      display: none;
+    }
+  }
+}
+
+.region-row {
+  display: flex;
+  gap: 8px;
+  .region-item {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.default-check {
+  padding: 2px 0 4px;
 }
 </style>

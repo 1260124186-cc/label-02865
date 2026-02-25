@@ -1,6 +1,6 @@
 # PhoneMall 手机商城
 
-京东风格的手机商城全栈项目，包含用户端（Mobile H5）架构。
+京东风格的手机商城全栈项目
 
 ## How to Run
 
@@ -37,7 +37,11 @@ docker-compose up --build -d
 
 ## 测试账号
 
-普通用户可通过注册页面自行注册。
+| 用户名 | 密码 |
+|--------|------|
+| user | 123456 |
+
+用户可通过注册页面自行注册。
 
 ## 题目内容
 
@@ -76,7 +80,7 @@ docker-compose up --build -d
 │       │   ├── entity/         # 9个实体类
 │       │   ├── mapper/         # MyBatis-Plus Mapper
 │       │   ├── service/        # Service 接口 + impl
-│       │   ├── controller/     # 8个 Controller
+│       │   ├── controller/     # 7个 Controller
 │       │   └── dto/            # DTO
 │       └── resources/
 │           ├── application.yml

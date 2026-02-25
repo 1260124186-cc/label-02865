@@ -24,7 +24,7 @@
 
     <!-- 商品列表 -->
     <div class="goods-section card">
-      <div v-for="item in cartStore.selectedItems" :key="item.id" class="goods-item">
+      <div v-for="item in checkoutItems" :key="item.id" class="goods-item">
         <img :src="item.product?.mainImage" class="gi-img" />
         <div class="gi-info">
           <div class="gi-name ellipsis-2">{{ item.product?.name }}</div>
@@ -40,7 +40,7 @@
     <div class="summary-section card">
       <div class="summary-row">
         <span>商品金额</span>
-        <span>¥{{ cartStore.totalPrice }}</span>
+        <span>¥{{ checkoutTotalPrice }}</span>
       </div>
       <div class="summary-row">
         <span>运费</span>
@@ -48,7 +48,7 @@
       </div>
       <div class="summary-row total-row">
         <span>合计</span>
-        <span class="price total-price">{{ cartStore.totalPrice }}</span>
+        <span class="price total-price">{{ checkoutTotalPrice }}</span>
       </div>
     </div>
 
@@ -56,7 +56,7 @@
     <div class="submit-bar safe-area-bottom">
       <div class="submit-info">
         <span>合计: </span>
-        <span class="price submit-price">{{ cartStore.totalPrice }}</span>
+        <span class="price submit-price">{{ checkoutTotalPrice }}</span>
       </div>
       <el-button type="primary" class="submit-btn" :loading="submitting" @click="handleSubmit">
         提交订单
@@ -89,40 +89,46 @@
     </el-drawer>
 
     <!-- 新增地址弹窗 -->
-    <el-dialog v-model="showAddressForm" title="新增收货地址" width="90%" :close-on-click-modal="false">
-      <el-form :model="addrForm" :rules="addrRules" ref="addrFormRef" label-position="top">
-        <el-form-item label="收货人" prop="receiverName">
-          <el-input v-model="addrForm.receiverName" placeholder="请输入收货人姓名" />
-        </el-form-item>
-        <el-form-item label="手机号" prop="receiverPhone">
-          <el-input v-model="addrForm.receiverPhone" placeholder="请输入手机号" maxlength="11" />
-        </el-form-item>
-        <el-form-item label="省份" prop="province">
-          <el-input v-model="addrForm.province" placeholder="如：广东省" />
-        </el-form-item>
-        <el-form-item label="城市" prop="city">
-          <el-input v-model="addrForm.city" placeholder="如：深圳市" />
-        </el-form-item>
-        <el-form-item label="区/县" prop="district">
-          <el-input v-model="addrForm.district" placeholder="如：南山区" />
-        </el-form-item>
-        <el-form-item label="详细地址" prop="detail">
-          <el-input v-model="addrForm.detail" type="textarea" :rows="2" placeholder="街道、楼栋、门牌号等" />
-        </el-form-item>
-        <el-form-item>
-          <el-checkbox v-model="addrForm.isDefault" :true-value="1" :false-value="0">设为默认地址</el-checkbox>
-        </el-form-item>
-      </el-form>
+    <el-dialog v-model="showAddressForm" title="新增收货地址" width="90%" :close-on-click-modal="false" @closed="handleAddrDialogClosed" class="addr-dialog">
+      <div class="addr-form-wrap">
+        <el-form :model="addrForm" :rules="addrRules" ref="addrFormRef" label-position="top" hide-required-asterisk class="addr-form">
+          <el-form-item prop="receiverName">
+            <el-input v-model="addrForm.receiverName" placeholder="收货人姓名" />
+          </el-form-item>
+          <el-form-item prop="receiverPhone">
+            <el-input v-model="addrForm.receiverPhone" placeholder="手机号" maxlength="11" />
+          </el-form-item>
+          <div class="region-row">
+            <el-form-item prop="province" class="region-item">
+              <el-input v-model="addrForm.province" placeholder="省份" />
+            </el-form-item>
+            <el-form-item prop="city" class="region-item">
+              <el-input v-model="addrForm.city" placeholder="城市" />
+            </el-form-item>
+            <el-form-item prop="district" class="region-item">
+              <el-input v-model="addrForm.district" placeholder="区/县" />
+            </el-form-item>
+          </div>
+          <el-form-item prop="detail">
+            <el-input v-model="addrForm.detail" placeholder="详细地址：街道、楼栋、门牌号等" />
+          </el-form-item>
+          <div class="default-check">
+            <el-checkbox v-model="addrForm.isDefault" :true-value="1" :false-value="0">设为默认地址</el-checkbox>
+          </div>
+        </el-form>
+      </div>
       <template #footer>
-        <el-button @click="showAddressForm = false">取消</el-button>
-        <el-button type="primary" :loading="savingAddr" @click="handleSaveAddr">保存</el-button>
+        <div class="h5-dialog-footer">
+          <el-button class="h5-btn-cancel" @click="showAddressForm = false">取消</el-button>
+          <el-button class="h5-btn-confirm" type="primary" :loading="savingAddr" @click="handleSaveAddr">保存</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/store/cart'
 import { getAddressList, saveAddress, deleteAddress } from '@/api/address'
@@ -131,6 +137,24 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 const cartStore = useCartStore()
+
+// 判断是否为"立即购买"模式
+const isBuyNow = computed(() => !!cartStore.buyNowItem)
+
+// 结算商品列表：立即购买用 buyNowItem，否则用购物车选中项
+const checkoutItems = computed(() => {
+  if (isBuyNow.value) {
+    return [cartStore.buyNowItem]
+  }
+  return cartStore.selectedItems
+})
+
+// 结算总价
+const checkoutTotalPrice = computed(() => {
+  return checkoutItems.value.reduce((sum, item) => {
+    return sum + (item.product?.price || 0) * item.quantity
+  }, 0).toFixed(2)
+})
 
 const addressList = ref([])
 const selectedAddress = ref(null)
@@ -187,8 +211,6 @@ async function handleSaveAddr() {
     await saveAddress(addrForm.value)
     ElMessage.success('地址保存成功')
     showAddressForm.value = false
-    // 重置表单
-    addrForm.value = { receiverName: '', receiverPhone: '', province: '', city: '', district: '', detail: '', isDefault: 0 }
     await loadAddresses()
     // 如果是第一个地址，自动选中
     if (addressList.value.length === 1) {
@@ -197,6 +219,11 @@ async function handleSaveAddr() {
   } finally {
     savingAddr.value = false
   }
+}
+
+function handleAddrDialogClosed() {
+  addrForm.value = { receiverName: '', receiverPhone: '', province: '', city: '', district: '', detail: '', isDefault: 0 }
+  addrFormRef.value?.resetFields()
 }
 
 async function handleDeleteAddr(id) {
@@ -215,7 +242,7 @@ async function handleSubmit() {
     ElMessage.warning('请先选择收货地址')
     return
   }
-  if (cartStore.selectedItems.length === 0) {
+  if (checkoutItems.value.length === 0) {
     ElMessage.warning('请先选择商品')
     return
   }
@@ -231,12 +258,17 @@ async function handleSubmit() {
 }
 
 onMounted(() => {
-  if (cartStore.selectedItems.length === 0) {
+  if (checkoutItems.value.length === 0) {
     ElMessage.warning('请先选择要结算的商品')
     router.replace('/cart')
     return
   }
   loadAddresses()
+})
+
+onUnmounted(() => {
+  // 离开结算页时清除立即购买数据
+  cartStore.clearBuyNowItem()
 })
 </script>
 
@@ -499,5 +531,26 @@ onMounted(() => {
   border-radius: 20px;
   background: #E4393C;
   border: none;
+}
+
+.addr-form-wrap {
+  .addr-form {
+    :deep(.el-form-item__label) {
+      display: none;
+    }
+  }
+}
+
+.region-row {
+  display: flex;
+  gap: 8px;
+  .region-item {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.default-check {
+  padding: 2px 0 4px;
 }
 </style>

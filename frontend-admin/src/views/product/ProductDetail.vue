@@ -46,7 +46,9 @@
           <span>首页</span>
         </div>
         <div class="bar-icon-item" @click="$router.push('/cart')">
-          <el-icon><ShoppingCart /></el-icon>
+          <el-badge :value="cartStore.totalCount > 0 ? cartStore.totalCount : ''" :hidden="cartStore.totalCount === 0" :max="99">
+            <el-icon><ShoppingCart /></el-icon>
+          </el-badge>
           <span>购物车</span>
         </div>
       </div>
@@ -110,8 +112,8 @@ async function handleBuyNow() {
   }
   addingCart.value = true
   try {
-    await cartStore.addToCart(product.value.id)
-    router.push('/cart')
+    cartStore.setBuyNowItem(product.value)
+    router.push('/order/checkout')
   } finally {
     addingCart.value = false
   }
