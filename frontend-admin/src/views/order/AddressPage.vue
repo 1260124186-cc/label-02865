@@ -14,24 +14,45 @@
       </div>
       <div v-else class="addr-list">
         <div v-for="addr in addressList" :key="addr.id" class="addr-card card">
-          <div class="addr-top">
-            <span class="addr-name">{{ addr.receiverName }}</span>
-            <span class="addr-phone">{{ addr.receiverPhone }}</span>
-            <span v-if="addr.isDefault" class="addr-default-tag">默认</span>
+          <div class="addr-content">
+            <div class="addr-top">
+              <span class="addr-name">{{ addr.receiverName }}</span>
+              <span class="addr-phone">{{ addr.receiverPhone }}</span>
+              <span v-if="addr.isDefault" class="addr-default-tag">默认</span>
+            </div>
+            <div class="addr-detail">{{ addr.province }}{{ addr.city }}{{ addr.district }} {{ addr.detail }}</div>
           </div>
-          <div class="addr-detail">{{ addr.province }}{{ addr.city }}{{ addr.district }} {{ addr.detail }}</div>
+          <div class="addr-divider"></div>
           <div class="addr-actions">
-            <el-button text size="small" type="danger" @click="handleDelete(addr.id)">删除</el-button>
+            <div class="addr-action-btn" @click="handleEdit(addr)">
+              <el-icon :size="14"><Edit /></el-icon>
+              <span>编辑</span>
+            </div>
+            <div class="addr-action-divider"></div>
+            <div class="addr-action-btn addr-action-delete" @click="handleDelete(addr.id)">
+              <el-icon :size="14"><Delete /></el-icon>
+              <span>删除</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
     <div class="bottom-add">
-      <el-button type="primary" class="add-btn" @click="showForm = true">+ 新增收货地址</el-button>
+      <el-button type="primary" class="add-btn" @click="openCreate">+ 新增收货地址</el-button>
     </div>
 
-    <el-dialog v-model="showForm" title="新增收货地址" width="100%" :close-on-click-modal="false" @closed="handleDialogClosed" class="addr-dialog" :append-to-body="true" :show-close="true" align-center>
+    <el-dialog
+      v-model="showForm"
+      :title="dialogTitle"
+      width="100%"
+      :close-on-click-modal="false"
+      @closed="handleDialogClosed"
+      class="addr-dialog"
+      :append-to-body="true"
+      :show-close="true"
+      align-center
+    >
       <el-form :model="form" :rules="rules" ref="formRef" label-position="top" hide-required-asterisk class="addr-form">
         <el-form-item prop="receiverName">
           <el-input v-model="form.receiverName" placeholder="收货人姓名" />
@@ -69,6 +90,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { Edit, Delete } from '@element-plus/icons-vue'
 import { getAddressList, saveAddress, deleteAddress } from '@/api/address'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -77,8 +99,20 @@ const loading = ref(false)
 const showForm = ref(false)
 const saving = ref(false)
 const formRef = ref(null)
+const dialogTitle = ref('新增收货地址')
 
-const form = ref({ receiverName: '', receiverPhone: '', province: '', city: '', district: '', detail: '', isDefault: 0 })
+const emptyForm = () => ({
+  id: null,
+  receiverName: '',
+  receiverPhone: '',
+  province: '',
+  city: '',
+  district: '',
+  detail: '',
+  isDefault: 0
+})
+
+const form = ref(emptyForm())
 
 const rules = {
   receiverName: [{ required: true, message: '请输入收货人', trigger: 'blur' }],
@@ -115,8 +149,23 @@ async function handleSave() {
   }
 }
 
+function openCreate() {
+  dialogTitle.value = '新增收货地址'
+  form.value = emptyForm()
+  formRef.value?.resetFields()
+  showForm.value = true
+}
+
+function handleEdit(addr) {
+  dialogTitle.value = '编辑收货地址'
+  form.value = { ...addr }
+  formRef.value?.resetFields()
+  showForm.value = true
+}
+
 function handleDialogClosed() {
-  form.value = { receiverName: '', receiverPhone: '', province: '', city: '', district: '', detail: '', isDefault: 0 }
+  dialogTitle.value = '新增收货地址'
+  form.value = emptyForm()
   formRef.value?.resetFields()
 }
 
@@ -169,32 +218,83 @@ onMounted(() => loadList())
   gap: 10px;
 }
 
-.addr-card { padding: 14px; }
+.addr-card {
+  padding: 0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.addr-content {
+  padding: 14px 16px;
+}
 
 .addr-top {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
-.addr-name { font-weight: bold; font-size: 15px; }
+.addr-name { font-weight: bold; font-size: 15px; color: #333; }
 .addr-phone { font-size: 13px; color: #666; }
 
 .addr-default-tag {
   font-size: 10px;
-  color: #E4393C;
-  border: 1px solid #E4393C;
-  padding: 0 4px;
+  color: #fff;
+  background: #E4393C;
+  padding: 1px 6px;
   border-radius: 2px;
+  line-height: 1.4;
 }
 
-.addr-detail { font-size: 13px; color: #666; line-height: 1.4; }
+.addr-detail { font-size: 13px; color: #888; line-height: 1.5; }
+
+.addr-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 0 16px;
+}
 
 .addr-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  margin-top: 8px;
+  padding: 8px 16px;
+  gap: 0;
+}
+
+.addr-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 14px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #333;
+    background: #f5f5f5;
+  }
+}
+
+.addr-action-delete {
+  color: #E4393C;
+
+  &:hover {
+    color: #c62828;
+    background: #fff0f0;
+  }
+}
+
+.addr-action-divider {
+  width: 1px;
+  height: 16px;
+  background: #e8e8e8;
 }
 
 .bottom-add {
