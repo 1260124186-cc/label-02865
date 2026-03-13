@@ -31,34 +31,32 @@
       <el-button type="primary" class="add-btn" @click="showForm = true">+ 新增收货地址</el-button>
     </div>
 
-    <el-dialog v-model="showForm" title="新增收货地址" width="90%" :close-on-click-modal="false" @closed="handleDialogClosed" class="addr-dialog">
-      <div class="addr-form-wrap">
-        <el-form :model="form" :rules="rules" ref="formRef" label-position="top" hide-required-asterisk class="addr-form">
-          <el-form-item prop="receiverName">
-            <el-input v-model="form.receiverName" placeholder="收货人姓名" />
+    <el-dialog v-model="showForm" title="新增收货地址" width="100%" :close-on-click-modal="false" @closed="handleDialogClosed" class="addr-dialog" :append-to-body="true" :show-close="true" align-center>
+      <el-form :model="form" :rules="rules" ref="formRef" label-position="top" hide-required-asterisk class="addr-form">
+        <el-form-item prop="receiverName">
+          <el-input v-model="form.receiverName" placeholder="收货人姓名" />
+        </el-form-item>
+        <el-form-item prop="receiverPhone">
+          <el-input v-model="form.receiverPhone" placeholder="手机号" maxlength="11" />
+        </el-form-item>
+        <div class="region-row">
+          <el-form-item prop="province" class="region-item">
+            <el-input v-model="form.province" placeholder="省份" />
           </el-form-item>
-          <el-form-item prop="receiverPhone">
-            <el-input v-model="form.receiverPhone" placeholder="手机号" maxlength="11" />
+          <el-form-item prop="city" class="region-item">
+            <el-input v-model="form.city" placeholder="城市" />
           </el-form-item>
-          <div class="region-row">
-            <el-form-item prop="province" class="region-item">
-              <el-input v-model="form.province" placeholder="省份" />
-            </el-form-item>
-            <el-form-item prop="city" class="region-item">
-              <el-input v-model="form.city" placeholder="城市" />
-            </el-form-item>
-            <el-form-item prop="district" class="region-item">
-              <el-input v-model="form.district" placeholder="区/县" />
-            </el-form-item>
-          </div>
-          <el-form-item prop="detail">
-            <el-input v-model="form.detail" placeholder="详细地址：街道、楼栋、门牌号等" />
+          <el-form-item prop="district" class="region-item">
+            <el-input v-model="form.district" placeholder="区/县" />
           </el-form-item>
-          <div class="default-check">
-            <el-checkbox v-model="form.isDefault" :true-value="1" :false-value="0">设为默认地址</el-checkbox>
-          </div>
-        </el-form>
-      </div>
+        </div>
+        <el-form-item prop="detail">
+          <el-input v-model="form.detail" placeholder="详细地址：街道、楼栋、门牌号等" />
+        </el-form-item>
+        <div class="default-check">
+          <el-checkbox v-model="form.isDefault" :true-value="1" :false-value="0">设为默认地址</el-checkbox>
+        </div>
+      </el-form>
       <template #footer>
         <div class="h5-dialog-footer">
           <el-button class="h5-btn-cancel" @click="showForm = false">取消</el-button>
@@ -220,11 +218,9 @@ onMounted(() => loadList())
   height: 40px;
 }
 
-.addr-form-wrap {
-  .addr-form {
-    :deep(.el-form-item__label) {
-      display: none;
-    }
+.addr-form {
+  :deep(.el-form-item__label) {
+    display: none;
   }
 }
 
@@ -234,10 +230,17 @@ onMounted(() => loadList())
   .region-item {
     flex: 1;
     min-width: 0;
+    overflow: visible;
+
+    :deep(.el-form-item__error) {
+      font-size: 11px;
+      padding-top: 1px;
+      white-space: nowrap;
+    }
   }
 }
 
 .default-check {
-  padding: 2px 0 4px;
+  padding: 0;
 }
 </style>

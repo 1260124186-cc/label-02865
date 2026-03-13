@@ -84,39 +84,37 @@
         <div v-if="addressList.length === 0" class="no-addr-tip">暂无收货地址</div>
       </div>
       <div class="addr-drawer-footer">
-        <el-button type="primary" class="add-addr-btn" @click="showAddressForm = true">+ 新增收货地址</el-button>
+        <el-button type="primary" class="add-addr-btn" @click="openAddressForm">+ 新增收货地址</el-button>
       </div>
     </el-drawer>
 
     <!-- 新增地址弹窗 -->
-    <el-dialog v-model="showAddressForm" title="新增收货地址" width="90%" :close-on-click-modal="false" @closed="handleAddrDialogClosed" class="addr-dialog">
-      <div class="addr-form-wrap">
-        <el-form :model="addrForm" :rules="addrRules" ref="addrFormRef" label-position="top" hide-required-asterisk class="addr-form">
-          <el-form-item prop="receiverName">
-            <el-input v-model="addrForm.receiverName" placeholder="收货人姓名" />
+    <el-dialog v-model="showAddressForm" title="新增收货地址" width="100%" :close-on-click-modal="false" @closed="handleAddrDialogClosed" class="addr-dialog" :append-to-body="true" :show-close="true" align-center>
+      <el-form :model="addrForm" :rules="addrRules" ref="addrFormRef" label-position="top" hide-required-asterisk class="addr-form">
+        <el-form-item prop="receiverName">
+          <el-input v-model="addrForm.receiverName" placeholder="收货人姓名" />
+        </el-form-item>
+        <el-form-item prop="receiverPhone">
+          <el-input v-model="addrForm.receiverPhone" placeholder="手机号" maxlength="11" />
+        </el-form-item>
+        <div class="region-row">
+          <el-form-item prop="province" class="region-item">
+            <el-input v-model="addrForm.province" placeholder="省份" />
           </el-form-item>
-          <el-form-item prop="receiverPhone">
-            <el-input v-model="addrForm.receiverPhone" placeholder="手机号" maxlength="11" />
+          <el-form-item prop="city" class="region-item">
+            <el-input v-model="addrForm.city" placeholder="城市" />
           </el-form-item>
-          <div class="region-row">
-            <el-form-item prop="province" class="region-item">
-              <el-input v-model="addrForm.province" placeholder="省份" />
-            </el-form-item>
-            <el-form-item prop="city" class="region-item">
-              <el-input v-model="addrForm.city" placeholder="城市" />
-            </el-form-item>
-            <el-form-item prop="district" class="region-item">
-              <el-input v-model="addrForm.district" placeholder="区/县" />
-            </el-form-item>
-          </div>
-          <el-form-item prop="detail">
-            <el-input v-model="addrForm.detail" placeholder="详细地址：街道、楼栋、门牌号等" />
+          <el-form-item prop="district" class="region-item">
+            <el-input v-model="addrForm.district" placeholder="区/县" />
           </el-form-item>
-          <div class="default-check">
-            <el-checkbox v-model="addrForm.isDefault" :true-value="1" :false-value="0">设为默认地址</el-checkbox>
-          </div>
-        </el-form>
-      </div>
+        </div>
+        <el-form-item prop="detail">
+          <el-input v-model="addrForm.detail" placeholder="详细地址：街道、楼栋、门牌号等" />
+        </el-form-item>
+        <div class="default-check">
+          <el-checkbox v-model="addrForm.isDefault" :true-value="1" :false-value="0">设为默认地址</el-checkbox>
+        </div>
+      </el-form>
       <template #footer>
         <div class="h5-dialog-footer">
           <el-button class="h5-btn-cancel" @click="showAddressForm = false">取消</el-button>
@@ -204,6 +202,14 @@ function pickAddress(addr) {
   showAddressPicker.value = false
 }
 
+function openAddressForm() {
+  showAddressPicker.value = false
+  // 等 drawer 关闭动画结束后再打开 dialog，避免页面闪动
+  setTimeout(() => {
+    showAddressForm.value = true
+  }, 350)
+}
+
 async function handleSaveAddr() {
   await addrFormRef.value.validate()
   savingAddr.value = true
@@ -216,6 +222,8 @@ async function handleSaveAddr() {
     if (addressList.value.length === 1) {
       selectedAddress.value = addressList.value[0]
     }
+    // 保存后重新打开地址选择抽屉
+    showAddressPicker.value = true
   } finally {
     savingAddr.value = false
   }
@@ -541,16 +549,29 @@ onUnmounted(() => {
   }
 }
 
+.addr-form {
+  :deep(.el-form-item__label) {
+    display: none;
+  }
+}
+
 .region-row {
   display: flex;
   gap: 8px;
   .region-item {
     flex: 1;
     min-width: 0;
+    overflow: visible;
+
+    :deep(.el-form-item__error) {
+      font-size: 11px;
+      padding-top: 1px;
+      white-space: nowrap;
+    }
   }
 }
 
 .default-check {
-  padding: 2px 0 4px;
+  padding: 0;
 }
 </style>

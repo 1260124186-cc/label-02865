@@ -171,7 +171,7 @@ body {
   }
 
   .el-form-item {
-    margin-bottom: 14px;
+    margin-bottom: 15px;
   }
 
   // checkbox 主题色
@@ -242,5 +242,65 @@ body {
     margin-bottom: 0;
     padding: 16px;
     font-weight: bold;
+  }
+}
+
+// ===================== 新增地址弹窗 - 移动端优化 =====================
+.addr-dialog {
+  // 底部弹出式弹窗，更贴合移动端交互
+  &.el-dialog {
+    margin: 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 750px !important;
+    border-radius: $radius-lg $radius-lg 0 0 !important;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+
+    .el-dialog__header {
+      padding: 14px 16px 10px;
+      flex-shrink: 0;
+    }
+
+    .el-dialog__body {
+      padding: 4px 16px 0;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .el-dialog__footer {
+      padding: 10px 16px 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      flex-shrink: 0;
+    }
+
+    // 表单项更紧凑
+    .el-form-item {
+      margin-bottom: 15px;
+    }
+
+    .el-input__wrapper {
+      padding: 4px 12px;
+    }
+
+    // 省/市/区行：错误提示缩小字号，防止溢出截断
+    .region-row {
+      .el-form-item {
+        margin-bottom: 15px;
+
+        .el-form-item__error {
+          font-size: 11px;
+          padding-top: 1px;
+          white-space: nowrap;
+          overflow: visible;
+        }
+      }
+    }
   }
 }
