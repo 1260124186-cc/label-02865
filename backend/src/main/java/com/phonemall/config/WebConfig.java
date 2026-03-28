@@ -35,7 +35,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/product/list",
                         "/api/product/hot",
                         "/api/product/recommend",
-                        "/api/product/*"
+                        "/api/product/*",
+                        "/api/review/product/*",
+                        "/api/review/product/*/rating"
                 );
     }
 }

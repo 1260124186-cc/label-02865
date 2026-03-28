@@ -137,6 +137,25 @@ CREATE TABLE IF NOT EXISTS `operation_log` (
     KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='操作日志表';
 
+-- 商品评价表
+CREATE TABLE IF NOT EXISTS `product_review` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `product_id` BIGINT NOT NULL COMMENT '商品ID',
+    `order_id` BIGINT NOT NULL COMMENT '订单ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `rating` TINYINT NOT NULL COMMENT '评分1-5',
+    `content` TEXT COMMENT '评价内容',
+    `images` TEXT COMMENT '评价图片(JSON数组)',
+    `merchant_reply` TEXT COMMENT '商家回复',
+    `reply_time` DATETIME COMMENT '回复时间',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_product` (`product_id`),
+    KEY `idx_user` (`user_id`),
+    UNIQUE KEY `uk_order_product` (`order_id`, `product_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='商品评价表';
+
 -- ===================== 初始数据 =====================
 -- 管理员账号: admin / 123456
 INSERT IGNORE INTO `user` (`id`, `username`, `password`, `nickname`, `role`, `status`) VALUES
@@ -199,3 +218,9 @@ INSERT IGNORE INTO `banner` (`id`, `image_url`, `product_id`, `sort_order`) VALU
 (1, '/img/iphone15pro.webp', 1, 1),
 (2, '/img/huawei-mate60.jpeg', 2, 2),
 (3, '/img/xiaomi14.webp', 3, 3);
+
+-- 评价数据
+INSERT IGNORE INTO `product_review` (`id`, `product_id`, `order_id`, `user_id`, `rating`, `content`, `merchant_reply`, `reply_time`, `create_time`) VALUES
+(1, 1, 1, 2, 5, '手机非常棒，性能强劲，拍照效果出色！', '感谢您的好评，我们会继续提供优质产品和服务！', '2026-02-20 10:00:00', '2026-02-19 15:30:00'),
+(2, 1, 2, 2, 4, '整体不错，就是续航稍微差了一点', '感谢您的反馈，我们会持续改进产品体验！', '2026-02-18 14:00:00', '2026-02-17 12:20:00'),
+(3, 2, 3, 2, 5, '华为手机果然名不虚传，卫星通话功能太实用了！', '感谢您对华为的支持，祝您使用愉快！', '2026-02-15 09:30:00', '2026-02-14 18:45:00');
