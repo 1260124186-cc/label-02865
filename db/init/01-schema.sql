@@ -137,6 +137,54 @@ CREATE TABLE IF NOT EXISTS `operation_log` (
     KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='操作日志表';
 
+-- 评价表
+CREATE TABLE IF NOT EXISTS `review` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `product_id` BIGINT NOT NULL COMMENT '商品ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `order_id` BIGINT DEFAULT NULL COMMENT '订单ID',
+    `rating` TINYINT NOT NULL COMMENT '评分(1-5)',
+    `content` TEXT COMMENT '评价内容',
+    `images` TEXT COMMENT '评价图片(JSON数组)',
+    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0待审核，1已审核，2已拒绝',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_product` (`product_id`),
+    KEY `idx_user` (`user_id`),
+    KEY `idx_order` (`order_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='评价表';
+
+-- 商家回复表
+CREATE TABLE IF NOT EXISTS `review_reply` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `review_id` BIGINT NOT NULL COMMENT '评价ID',
+    `admin_id` BIGINT NOT NULL COMMENT '管理员ID',
+    `content` TEXT NOT NULL COMMENT '回复内容',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_review` (`review_id`),
+    KEY `idx_admin` (`admin_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='商家回复表';
+
+-- 商品评分统计表
+CREATE TABLE IF NOT EXISTS `product_rating` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `product_id` BIGINT NOT NULL COMMENT '商品ID',
+    `total_rating` INT NOT NULL DEFAULT 0 COMMENT '总评分',
+    `review_count` INT NOT NULL DEFAULT 0 COMMENT '评价数量',
+    `rating1_count` INT NOT NULL DEFAULT 0 COMMENT '1星评价数量',
+    `rating2_count` INT NOT NULL DEFAULT 0 COMMENT '2星评价数量',
+    `rating3_count` INT NOT NULL DEFAULT 0 COMMENT '3星评价数量',
+    `rating4_count` INT NOT NULL DEFAULT 0 COMMENT '4星评价数量',
+    `rating5_count` INT NOT NULL DEFAULT 0 COMMENT '5星评价数量',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_product` (`product_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='商品评分统计表';
+
 -- ===================== 初始数据 =====================
 -- 管理员账号: admin / 123456
 INSERT IGNORE INTO `user` (`id`, `username`, `password`, `nickname`, `role`, `status`) VALUES
