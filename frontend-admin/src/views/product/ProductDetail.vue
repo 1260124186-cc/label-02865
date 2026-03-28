@@ -31,6 +31,65 @@
         </div>
       </div>
 
+      <!-- 评分统计 -->
+      <div class="rating-section card" v-if="averageRating > 0">
+        <div class="rating-header">
+          <span class="rating-title">用户评价</span>
+          <div class="rating-summary">
+            <span class="rating-score">{{ averageRating.toFixed(1) }}</span>
+            <div class="rating-stars">
+              <el-rate v-model="averageRating" disabled show-score text-color="#ff9900" />
+            </div>
+            <span class="rating-count">({{ totalReviews }}条)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 评价列表 -->
+      <div class="reviews-section card" v-if="reviews.length > 0">
+        <div class="reviews-list">
+          <div class="review-item" v-for="review in reviews" :key="review.id">
+            <div class="review-header">
+              <div class="review-user">
+                <el-avatar :size="32" :src="review.avatar || ''">
+                  {{ review.nickname ? review.nickname.charAt(0) : 'U' }}
+                </el-avatar>
+                <span class="user-name">{{ review.nickname || '匿名用户' }}</span>
+              </div>
+              <div class="review-rating">
+                <el-rate v-model="review.rating" disabled show-score text-color="#ff9900" />
+              </div>
+            </div>
+            <div class="review-content">
+              <p v-if="review.content">{{ review.content }}</p>
+              <div class="review-images" v-if="review.images">
+                <img v-for="(img, idx) in JSON.parse(review.images || '[]')"
+                     :key="idx"
+                     :src="img"
+                     class="review-image" />
+              </div>
+              <div class="review-time">{{ formatTime(review.createTime) }}</div>
+            </div>
+            <div class="merchant-reply" v-if="review.merchantReply">
+              <div class="reply-label">商家回复</div>
+              <div class="reply-content">{{ review.merchantReply }}</div>
+              <div class="reply-time">{{ formatTime(review.replyTime) }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="load-more" v-if="hasMore" @click="loadMoreReviews">
+          <span>加载更多</span>
+        </div>
+        <div class="no-more" v-if="!hasMore && reviews.length > 0">
+          <span>没有更多评价了</span>
+        </div>
+      </div>
+
+      <!-- 暂无评价 -->
+      <div class="no-reviews card" v-if="reviews.length === 0">
+        <el-empty description="暂无评价" :image-size="80" />
+      </div>
+
       <!-- 商品描述 -->
       <div class="desc-section card">
         <div class="desc-title">商品详情</div>
@@ -64,6 +123,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getProductDetail } from '@/api/product'
+import { getProductReviews, getAverageRating } from '@/api/review'
 import { useCartStore } from '@/store/cart'
 import { useUserStore } from '@/store/user'
 import { ElMessage } from 'element-plus'
@@ -75,6 +135,12 @@ const userStore = useUserStore()
 
 const product = ref(null)
 const addingCart = ref(false)
+const reviews = ref([])
+const averageRating = ref(0)
+const totalReviews = ref(0)
+const currentPage = ref(1)
+const hasMore = ref(true)
+const loadingReviews = ref(false)
 
 const allImages = computed(() => {
   if (!product.value) return []
@@ -89,7 +155,61 @@ const allImages = computed(() => {
 onMounted(async () => {
   const res = await getProductDetail(route.params.id)
   product.value = res.data
+  await loadRating()
+  await loadReviews()
 })
+
+async function loadRating() {
+  try {
+    const res = await getAverageRating(route.params.id)
+    averageRating.value = res.data.averageRating
+    totalReviews.value = res.data.totalCount
+  } catch (e) {
+    console.error('Failed to load rating', e)
+  }
+}
+
+async function loadReviews() {
+  if (loadingReviews.value) return
+  loadingReviews.value = true
+  try {
+    const res = await getProductReviews(route.params.id, {
+      page: currentPage.value,
+      size: 10
+    })
+    if (currentPage.value === 1) {
+      reviews.value = res.data.records
+    } else {
+      reviews.value = [...reviews.value, ...res.data.records]
+    }
+    hasMore.value = res.data.current < res.data.pages
+  } catch (e) {
+    console.error('Failed to load reviews', e)
+  } finally {
+    loadingReviews.value = false
+  }
+}
+
+function loadMoreReviews() {
+  if (hasMore.value && !loadingReviews.value) {
+    currentPage.value++
+    loadReviews()
+  }
+}
+
+function formatTime(time) {
+  if (!time) return ''
+  const date = new Date(time)
+  const now = new Date()
+  const diff = now - date
+
+  if (diff < 60000) return '刚刚'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)}天前`
+
+  return date.toLocaleDateString('zh-CN')
+}
 
 async function handleAddCart() {
   if (!userStore.isLoggedIn) {
@@ -278,5 +398,159 @@ async function handleBuyNow() {
   margin: 0;
 
   &:hover { background: #c62f32; }
+}
+
+.rating-section {
+  margin: 12px;
+  padding: 16px;
+}
+
+.rating-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rating-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+}
+
+.rating-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rating-score {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ff9900;
+}
+
+.rating-count {
+  font-size: 12px;
+  color: #999;
+}
+
+.reviews-section {
+  margin: 12px;
+  padding: 16px 16px 8px;
+}
+
+.reviews-list {
+  .review-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f5f5;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.review-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-name {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.review-rating {
+  :deep(.el-rate) {
+    --el-rate-icon-size: 14px;
+  }
+}
+
+.review-content {
+  p {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+    margin: 0 0 8px 0;
+  }
+}
+
+.review-images {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.review-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.review-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.merchant-reply {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border-left: 3px solid #E4393C;
+}
+
+.reply-label {
+  font-size: 12px;
+  color: #E4393C;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.reply-content {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.reply-time {
+  font-size: 11px;
+  color: #999;
+  margin-top: 6px;
+}
+
+.load-more {
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  color: #999;
+  font-size: 14px;
+
+  &:hover {
+    color: #E4393C;
+  }
+}
+
+.no-more {
+  padding: 12px;
+  text-align: center;
+  color: #ccc;
+  font-size: 12px;
+}
+
+.no-reviews {
+  margin: 12px;
+  padding: 24px 16px;
 }
 </style>
